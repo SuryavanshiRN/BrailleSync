@@ -70,10 +70,12 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="gradient-text">Dashboard</span>
+          </h1>
           <p className="text-muted-foreground">
             Overview of your translation activity
           </p>
@@ -81,12 +83,14 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
           {statCards.map((stat, index) => (
-            <Card key={index}>
+            <Card key={index} className="hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {stat.title}
                 </CardTitle>
-                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <stat.icon className="w-4 h-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>

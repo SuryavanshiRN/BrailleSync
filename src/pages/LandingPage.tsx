@@ -38,23 +38,23 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl xl:text-6xl font-bold text-foreground">
-            Braille Translator
+          <h1 className="text-5xl xl:text-6xl font-bold">
+            <span className="gradient-text">Braille Translator</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Convert text to Braille language with multiple input methods and audio feedback
           </p>
-          <div className="flex gap-4 justify-center pt-4">
-            <Button asChild size="lg">
+          <div className="flex gap-4 justify-center pt-4 flex-wrap">
+            <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-all">
               <Link to="/translate">
                 Get Started
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
+            <Button asChild variant="outline" size="lg" className="border-2 hover:border-primary">
               <Link to="/dashboard">
                 View Dashboard
               </Link>
@@ -64,19 +64,19 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-16">
           {features.map((feature, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
+            <Card key={index} className="hover:shadow-lg hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50">
               <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center mb-4 shadow-md">
+                  <feature.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <CardTitle>{feature.title}</CardTitle>
+                <CardTitle className="text-lg">{feature.title}</CardTitle>
                 <CardDescription>{feature.description}</CardDescription>
               </CardHeader>
             </Card>
           ))}
         </div>
 
-        <Card className="bg-primary text-primary-foreground">
+        <Card className="bg-gradient-to-br from-primary via-primary to-primary-glow text-primary-foreground shadow-xl border-0">
           <CardContent className="p-8 xl:p-12">
             <div className="flex flex-col xl:flex-row items-center justify-between gap-6">
               <div className="space-y-2">

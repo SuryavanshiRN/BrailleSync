@@ -82,10 +82,12 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Translation History</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="gradient-text-secondary">Translation History</span>
+          </h1>
           <p className="text-muted-foreground">
             View and manage your previous translations
           </p>
@@ -130,11 +132,11 @@ export default function HistoryPage() {
             {translations.map((translation) => {
               const Icon = methodIcons[translation.input_method];
               return (
-                <Card key={translation.id} className="hover:shadow-md transition-shadow">
+                <Card key={translation.id} className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-2 hover:border-secondary/50">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-6 h-6 text-primary" />
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center flex-shrink-0 shadow-md">
+                        <Icon className="w-6 h-6 text-secondary-foreground" />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center justify-between gap-2">

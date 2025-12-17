@@ -69,10 +69,12 @@ export default function TranslationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Translation Tool</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="gradient-text">Translation Tool</span>
+          </h1>
           <p className="text-muted-foreground">
             Convert text to Braille using multiple input methods
           </p>
