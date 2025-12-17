@@ -1,48 +1,276 @@
-# Welcome to Your Miaoda Project
+# 🔤 Braille Sync
 
-## Project Info
+<div align="center">
 
-## Project Directory
+**A modern web application that converts text to Braille with multi-modal input support**
+
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-Latest-646CFF?logo=vite)](https://vitejs.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Latest-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+
+</div>
+
+---
+
+## 📋 Overview
+
+Braille Sync is an accessible web-based translation platform that converts regular text into Braille language. The application supports multiple input methods including text, image OCR, audio transcription, and real-time microphone input, making it versatile and user-friendly for diverse accessibility needs.
+
+### ✨ Key Features
+
+- 🔤 **Multiple Input Methods**
+
+  - Direct text input
+  - Image-to-text conversion (OCR)
+  - Audio file transcription
+  - Real-time microphone recording
+
+- 👁️ **Visual Braille Display** - See your text converted to authentic Braille characters
+- 🔊 **Audio Output** - Text-to-speech playback of translations
+- 💾 **Translation History** - Save and manage past translations
+- 📊 **Dashboard** - Overview of translation statistics and quick access
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+- ♿ **Accessibility First** - Built with WCAG compliance in mind
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** (v18 or higher)
+- **pnpm** (recommended) or npm
+- **Supabase** account (for database features)
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <your-repository-url>
+   cd Braille_Sync
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pnpm install
+   # or
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Create a `.env` file in the root directory:
+
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Set up Supabase**
+
+   Run the migration to create the necessary database tables:
+
+   ```bash
+   # Apply the migration from supabase/migrations/
+   ```
+
+5. **Start the development server**
+
+   ```bash
+   pnpm start
+   # or
+   npm start
+   ```
+
+   The application will open at `http://localhost:5173`
+
+---
+
+## 🏗️ Project Structure
 
 ```
-├── README.md # Documentation
-├── components.json # Component library configuration
-├── eslint.config.js # ESLint configuration
-├── index.html # Entry file
-├── package.json # Package management
-├── postcss.config.js # PostCSS configuration
-├── public # Static resources directory
-│   ├── favicon.png # Icon
-│   └── images # Image resources
-├── src # Source code directory
-│   ├── App.tsx # Entry file
-│   ├── components # Components directory
-│   ├── context # Context directory
-│   ├── db # Database configuration directory
-│   ├── hooks # Common hooks directory
-│   ├── index.css # Global styles
-│   ├── layout # Layout directory
-│   ├── lib # Utility library directory
-│   ├── main.tsx # Entry file
-│   ├── routes.tsx # Routing configuration
-│   ├── pages # Pages directory
-│   ├── services # Database interaction directory
-│   ├── types # Type definitions directory
-├── tsconfig.app.json # TypeScript frontend configuration file
-├── tsconfig.json # TypeScript configuration file
-├── tsconfig.node.json # TypeScript Node.js configuration file
-└── vite.config.ts # Vite configuration file
+Braille_Sync/
+├── public/                    # Static assets
+│   └── images/               # Image resources
+├── src/
+│   ├── components/           # React components
+│   │   ├── common/          # Shared components (Header, Footer)
+│   │   ├── translation/     # Translation-specific components
+│   │   └── ui/              # UI component library (shadcn/ui)
+│   ├── db/                   # Database configuration
+│   │   ├── api.ts           # Database operations
+│   │   └── supabase.ts      # Supabase client
+│   ├── hooks/               # Custom React hooks
+│   ├── lib/                 # Utility functions
+│   ├── pages/               # Page components
+│   │   ├── LandingPage.tsx
+│   │   ├── TranslationPage.tsx
+│   │   ├── DashboardPage.tsx
+│   │   └── HistoryPage.tsx
+│   ├── services/            # API services
+│   ├── types/               # TypeScript type definitions
+│   ├── utils/               # Utility functions
+│   │   └── braille.ts       # Braille conversion logic
+│   ├── App.tsx              # Main App component
+│   ├── routes.tsx           # Route configuration
+│   └── main.tsx             # Application entry point
+├── supabase/
+│   └── migrations/          # Database migrations
+├── docs/                    # Documentation
+│   └── prd.md              # Product Requirements Document
+└── package.json            # Dependencies and scripts
 ```
 
-## Tech Stack
+---
 
-Vite, TypeScript, React, Supabase
+## 🛠️ Tech Stack
 
-## Development Guidelines
+### Frontend
 
-### How to edit code locally?
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **React Router** - Navigation
+- **Tailwind CSS** - Styling
+- **shadcn/ui** - UI components
+- **Radix UI** - Accessible primitives
 
-You can choose [VSCode](https://code.visualstudio.com/Download) or any IDE you prefer. The only requirement is to have Node.js and npm installed.
+### Backend & Database
+
+- **Supabase** - Backend as a Service (BaaS)
+  - PostgreSQL database
+  - Authentication (if enabled)
+  - Real-time subscriptions
+
+### Additional Libraries
+
+- **Axios** - HTTP client
+- **Lucide React** - Icons
+- **React Hook Form** - Form management
+- **Sonner** - Toast notifications
+
+---
+
+## 📖 Usage
+
+### Translation Workflow
+
+1. **Navigate to Translation Page**
+
+   - Click on "Translate" from the navigation menu
+
+2. **Choose Input Method**
+
+   - **Text**: Type or paste text directly
+   - **Image**: Upload an image containing text (OCR)
+   - **Audio**: Upload an audio file for transcription
+   - **Microphone**: Record voice in real-time
+
+3. **View Results**
+
+   - See the Braille conversion in real-time
+   - Play audio output if needed
+
+4. **Save Translation**
+   - Click "Save" to store the translation in your history
+   - Access saved translations from the History page
+
+---
+
+## 🎨 Design Philosophy
+
+Braille Sync follows a clean, accessible design approach:
+
+- **Color Scheme**: Deep blue primary color with soft yellow accents
+- **Typography**: Clear, high-contrast fonts for readability
+- **Layout**: Card-based responsive design
+- **Accessibility**: WCAG-compliant with keyboard navigation support
+
+---
+
+## 📝 Available Scripts
+
+```bash
+# Start development server
+pnpm start
+
+# Run linting and checks
+pnpm lint
+
+# Stop development server
+pnpm stop
+```
+
+---
+
+## 🔑 Key Components
+
+### Braille Conversion
+
+The core translation logic is in [`src/utils/braille.ts`](src/utils/braille.ts), which maps characters to their Braille Unicode equivalents, handling:
+
+- Alphabetic characters (a-z)
+- Numbers (0-9) with number indicator
+- Punctuation marks
+- Capital letter indicators
+- Space characters
+
+### Input Components
+
+- **TextInput**: Direct text entry
+- **ImageUpload**: OCR processing for images
+- **AudioUpload**: Audio file transcription
+- **MicrophoneInput**: Real-time voice recording
+
+### Output Components
+
+- **BrailleDisplay**: Visual Braille representation
+- **AudioPlayer**: Text-to-speech playback
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is part of an internship project for X_Mega.
+
+---
+
+## 🙏 Acknowledgments
+
+- shadcn/ui for the beautiful component library
+- Radix UI for accessible primitives
+- Supabase for the backend infrastructure
+- The accessibility community for Braille standards
+
+---
+
+## 📞 Contact
+
+For questions or feedback, please reach out through the project repository.
+
+---
+
+<div align="center">
+
+**Made with ❤️ for accessibility**
+
+</div>
 
 ### Environment Requirements
 
