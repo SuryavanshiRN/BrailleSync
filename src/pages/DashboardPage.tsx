@@ -1,17 +1,39 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { getTranslationStats, getTranslations } from '@/db/api';
-import type { TranslationStats, Translation } from '@/types';
-import { ArrowRight, Type, Image, Music, Mic, FileText } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { getTranslationStats, getTranslations } from "@/db/api";
+import type { TranslationStats, Translation } from "@/types";
+import {
+  ArrowRight,
+  Type,
+  Image,
+  Music,
+  Mic,
+  FileText,
+  TrendingUp,
+  Activity,
+  Clock,
+  Zap,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { StatsCards } from "@/components/dashboard/StatsCards";
+import { useTranslation } from "react-i18next";
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<TranslationStats>({
     total: 0,
     byMethod: { text: 0, image: 0, audio: 0, microphone: 0 },
   });
-  const [recentTranslations, setRecentTranslations] = useState<Translation[]>([]);
+  const [recentTranslations, setRecentTranslations] = useState<Translation[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,100 +60,116 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: 'Total Translations',
+      title: "Total Translations",
       value: stats.total,
       icon: FileText,
-      color: 'text-primary',
+      color: "text-primary",
     },
     {
-      title: 'Text Input',
+      title: "Text Input",
       value: stats.byMethod.text,
       icon: Type,
-      color: 'text-chart-1',
+      color: "text-chart-1",
     },
     {
-      title: 'Image Upload',
+      title: "Image Upload",
       value: stats.byMethod.image,
       icon: Image,
-      color: 'text-chart-2',
+      color: "text-chart-2",
     },
     {
-      title: 'Audio Upload',
+      title: "Audio Upload",
       value: stats.byMethod.audio,
       icon: Music,
-      color: 'text-chart-3',
+      color: "text-chart-3",
     },
     {
-      title: 'Microphone',
+      title: "Microphone",
       value: stats.byMethod.microphone,
       icon: Mic,
-      color: 'text-chart-4',
+      color: "text-chart-4",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="gradient-text">Dashboard</span>
+    <div className="min-h-screen gradient-mesh relative">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="container mx-auto px-4 py-10 relative z-10">
+        <div className="mb-10 fade-in">
+          <h1 className="text-5xl font-bold mb-3">
+            <span className="gradient-text text-shadow-soft">
+              {t("dashboard.title")}
+            </span>
           </h1>
-          <p className="text-muted-foreground">
-            Overview of your translation activity
+          <p className="text-lg text-muted-foreground">
+            {t("dashboard.subtitle")}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
-          {statCards.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary/30">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-4 h-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="mb-10">
+          <StatsCards />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Translations</CardTitle>
-              <CardDescription>
-                Your most recent Braille conversions
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <Card className="glass-card border-2 hover:border-primary/30 transition-all">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Clock className="w-6 h-6 text-primary" />
+                {t("dashboard.recentTranslations.title")}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {t("dashboard.recentTranslations.subtitle")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
-              ) : recentTranslations.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No translations yet. Start by creating your first translation!
+                <p className="text-muted-foreground text-center py-12 text-lg">
+                  {t("common.loading")}
                 </p>
+              ) : recentTranslations.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/5 flex items-center justify-center">
+                    <FileText className="w-10 h-10 text-primary/40" />
+                  </div>
+                  <p className="text-muted-foreground text-lg mb-2">
+                    {t("dashboard.recentTranslations.empty")}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {t("dashboard.recentTranslations.emptySubtitle")}
+                  </p>
+                  <Button asChild className="btn-gradient">
+                    <Link to="/translate">
+                      <Type className="mr-2 w-4 h-4" />
+                      {t("landing.cta.button")}
+                    </Link>
+                  </Button>
+                </div>
               ) : (
-                <div className="space-y-4">
-                  {recentTranslations.map((translation) => {
+                <div className="space-y-3">
+                  {recentTranslations.map((translation, index) => {
                     const Icon = methodIcons[translation.input_method];
                     return (
                       <div
                         key={translation.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-accent transition-colors"
+                        className="group flex items-start gap-4 p-4 rounded-xl border-2 border-border hover:border-primary/40 hover:shadow-medium transition-all bg-card/50 backdrop-blur-sm slide-in-left"
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-4 h-4 text-primary" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <Icon className="w-6 h-6 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
+                          <p className="text-base font-semibold truncate mb-1 group-hover:text-primary transition-colors">
                             {translation.input_text}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(translation.created_at).toLocaleDateString()}
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Clock className="w-3 h-3" />
+                            {new Date(
+                              translation.created_at
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </p>
                         </div>
                       </div>
@@ -139,33 +177,49 @@ export default function DashboardPage() {
                   })}
                 </div>
               )}
-              <Button asChild variant="outline" className="w-full mt-4">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full mt-6 h-12 text-base hover:btn-gradient hover:text-white transition-all"
+              >
                 <Link to="/history">
-                  View All History
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  {t("dashboard.recentTranslations.viewAll")}
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Get started with common tasks
+          <Card className="glass-card border-2 hover:border-primary/30 transition-all">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Zap className="w-6 h-6 text-primary" />
+                {t("dashboard.quickActions.title")}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {t("dashboard.quickActions.subtitle")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button asChild className="w-full justify-start" size="lg">
+              <Button
+                asChild
+                className="btn-gradient w-full justify-start h-14 text-base shadow-medium hover:shadow-strong transition-all"
+                size="lg"
+              >
                 <Link to="/translate">
-                  <Type className="mr-2 w-5 h-5" />
-                  New Translation
+                  <Type className="mr-3 w-6 h-6" />
+                  {t("dashboard.quickActions.newTranslation")}
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full justify-start" size="lg">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-14 text-base border-2 hover:border-primary/40 hover:shadow-medium transition-all"
+                size="lg"
+              >
                 <Link to="/history">
-                  <FileText className="mr-2 w-5 h-5" />
-                  View History
+                  <FileText className="mr-3 w-6 h-6" />
+                  {t("dashboard.quickActions.viewHistory")}
                 </Link>
               </Button>
             </CardContent>

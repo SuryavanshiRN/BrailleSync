@@ -1,24 +1,27 @@
-import { supabase } from './supabase';
-import type { Translation, TranslationStats } from '@/types';
+import { supabase } from "./supabase";
+import type { Translation, TranslationStats } from "@/types";
 
-export const getUserUUID = (): string => {
-  let uuid = localStorage.getItem('braille-user-uuid');
-  if (!uuid) {
-    uuid = crypto.randomUUID();
-    localStorage.setItem('braille-user-uuid', uuid);
-  }
-  return uuid;
+export const getUserUUID = async (): Promise<string | null> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id || null;
 };
 
 export const saveTranslation = async (
   inputText: string,
   brailleOutput: string,
-  inputMethod: 'text' | 'image' | 'audio' | 'microphone'
+  inputMethod: "text" | "image" | "audio" | "microphone" | "file" | "braille"
 ): Promise<Translation | null> => {
-  const userUuid = getUserUUID();
-  
+  const userUuid = await getUserUUID();
+
+  if (!userUuid) {
+    console.error("User not authenticated");
+    return null;
+  }
+
   const { data, error } = await supabase
-    .from('translations')
+    .from("translations")
     .insert({
       user_uuid: userUuid,
       input_text: inputText,
@@ -29,7 +32,7 @@ export const saveTranslation = async (
     .maybeSingle();
 
   if (error) {
-    console.error('Error saving translation:', error);
+    console.error("Error saving translation:", error);
     return null;
   }
 
@@ -40,17 +43,22 @@ export const getTranslations = async (
   limit = 50,
   offset = 0
 ): Promise<Translation[]> => {
-  const userUuid = getUserUUID();
-  
+  const userUuid = await getUserUUID();
+
+  if (!userUuid) {
+    console.error("User not authenticated");
+    return [];
+  }
+
   const { data, error } = await supabase
-    .from('translations')
-    .select('*')
-    .eq('user_uuid', userUuid)
-    .order('created_at', { ascending: false })
+    .from("translations")
+    .select("*")
+    .eq("user_uuid", userUuid)
+    .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('Error fetching translations:', error);
+    console.error("Error fetching translations:", error);
     return [];
   }
 
@@ -58,15 +66,22 @@ export const getTranslations = async (
 };
 
 export const getTranslationStats = async (): Promise<TranslationStats> => {
-  const userUuid = getUserUUID();
-  
+  const userUuid = await getUserUUID();
+
+  if (!userUuid) {
+    return {
+      total: 0,
+      byMethod: { text: 0, image: 0, audio: 0, microphone: 0 },
+    };
+  }
+
   const { data, error } = await supabase
-    .from('translations')
-    .select('input_method')
-    .eq('user_uuid', userUuid);
+    .from("translations")
+    .select("input_method")
+    .eq("user_uuid", userUuid);
 
   if (error) {
-    console.error('Error fetching stats:', error);
+    console.error("Error fetching stats:", error);
     return {
       total: 0,
       byMethod: { text: 0, image: 0, audio: 0, microphone: 0 },
@@ -94,13 +109,10 @@ export const getTranslationStats = async (): Promise<TranslationStats> => {
 };
 
 export const deleteTranslation = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('translations')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("translations").delete().eq("id", id);
 
   if (error) {
-    console.error('Error deleting translation:', error);
+    console.error("Error deleting translation:", error);
     return false;
   }
 
@@ -111,16 +123,16 @@ export const searchTranslations = async (
   query: string
 ): Promise<Translation[]> => {
   const userUuid = getUserUUID();
-  
+
   const { data, error } = await supabase
-    .from('translations')
-    .select('*')
-    .eq('user_uuid', userUuid)
+    .from("translations")
+    .select("*")
+    .eq("user_uuid", userUuid)
     .or(`input_text.ilike.%${query}%,braille_output.ilike.%${query}%`)
-    .order('created_at', { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error searching translations:', error);
+    console.error("Error searching translations:", error);
     return [];
   }
 

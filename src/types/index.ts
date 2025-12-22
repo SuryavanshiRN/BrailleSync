@@ -10,7 +10,7 @@ export interface Translation {
   user_uuid: string;
   input_text: string;
   braille_output: string;
-  input_method: 'text' | 'image' | 'audio' | 'microphone';
+  input_method: "text" | "image" | "audio" | "microphone" | "file" | "braille";
   created_at: string;
 }
 
@@ -21,5 +21,7 @@ export interface TranslationStats {
     image: number;
     audio: number;
     microphone: number;
+    file: number;
+    braille: number;
   };
 }

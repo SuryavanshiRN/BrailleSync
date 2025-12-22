@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Image, Upload, Loader2 } from "lucide-react";
-import { extractTextFromImage } from "@/services/api";
+import { FileText, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface ImageUploadProps {
+interface FileUploadProps {
   onTextExtracted: (text: string) => void;
 }
 
-export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
+export const FileUpload = ({ onTextExtracted }: FileUploadProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -17,11 +16,10 @@ export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
+      if (!file.type.startsWith("text/") && !file.name.endsWith(".txt")) {
         toast({
           title: "Invalid file type",
-          description:
-            "Please select a valid image file (.jpg, .png, .gif, etc.)",
+          description: "Please select a text file (.txt)",
           variant: "destructive",
         });
         return;
@@ -34,7 +32,7 @@ export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
     if (!selectedFile) {
       toast({
         title: "No file selected",
-        description: "Please select an image file first",
+        description: "Please select a text file first",
         variant: "destructive",
       });
       return;
@@ -42,19 +40,18 @@ export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
 
     setIsProcessing(true);
     try {
-      const text = await extractTextFromImage(selectedFile);
+      const text = await selectedFile.text();
       if (text) {
         onTextExtracted(text);
         toast({
           title: "Success",
-          description: "Text extracted from image successfully",
+          description: "Text loaded from file successfully",
         });
         setSelectedFile(null);
       } else {
         toast({
-          title: "No text found",
-          description:
-            "Could not find readable text in the image. Try a clearer image with better contrast.",
+          title: "Empty file",
+          description: "The file appears to be empty",
           variant: "destructive",
         });
       }
@@ -62,9 +59,7 @@ export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
       toast({
         title: "Error",
         description:
-          error instanceof Error
-            ? error.message
-            : "Failed to process image. Please check your internet connection and try again.",
+          error instanceof Error ? error.message : "Failed to read text file",
         variant: "destructive",
       });
     } finally {
@@ -75,32 +70,32 @@ export const ImageUpload = ({ onTextExtracted }: ImageUploadProps) => {
   return (
     <div className="space-y-2">
       <Label className="flex items-center gap-2">
-        <Image className="w-4 h-4" />
-        Image Upload
+        <FileText className="w-4 h-4" />
+        Text File Upload
       </Label>
       <div className="flex gap-2">
         <input
           type="file"
-          accept="image/*"
+          accept=".txt,text/plain"
           onChange={handleFileChange}
           className="hidden"
-          id="image-upload"
+          id="file-upload"
         />
         <label
-          htmlFor="image-upload"
+          htmlFor="file-upload"
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-input rounded-md cursor-pointer hover:bg-accent transition-colors"
         >
           <Upload className="w-4 h-4" />
-          {selectedFile ? selectedFile.name : "Choose Image"}
+          {selectedFile ? selectedFile.name : "Choose Text File"}
         </label>
         <Button onClick={handleUpload} disabled={!selectedFile || isProcessing}>
           {isProcessing ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
+              Loading...
             </>
           ) : (
-            "Extract Text"
+            "Load Text"
           )}
         </Button>
       </div>
