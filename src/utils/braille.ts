@@ -15,14 +15,41 @@ const brailleMap: Record<string, string> = {
 const capitalIndicator = '⠠';
 const numberIndicator = '⠼';
 
-export const textToBraille = (text: string): string => {
+// Basic Grade-2 Contractions
+const contractions: Record<string, string> = {
+  "the": "⠮", "and": "⠯", "for": "⠿", "with": "⠾", "ing": "⠬"
+};
+
+/**
+ * Converts text to Braille.
+ * @param isGrade2 - If true, applies word-based contractions.
+ */
+export const textToBraille = (text: string, isGrade2 = false): string => {
   if (!text) return '';
   
+  let content = text;
+  
+  // Apply Grade-2 contractions if enabled
+  if (isGrade2) {
+    Object.entries(contractions).forEach(([word, char]) => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      content = content.replace(regex, char);
+    });
+  }
+
   let result = '';
   let inNumber = false;
   
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    
+    // If it's already a braille contraction from the step above, pass it through
+    if (Object.values(contractions).includes(char)) {
+      result += char;
+      inNumber = false;
+      continue;
+    }
+
     const lowerChar = char.toLowerCase();
     
     if (char >= '0' && char <= '9') {
@@ -49,10 +76,21 @@ export const textToBraille = (text: string): string => {
   return result;
 };
 
+/**
+ * Converts Braille back to Text.
+ * Updated to handle Grade-2 contractions.
+ */
 export const brailleToText = (braille: string): string => {
   const reverseBrailleMap: Record<string, string> = {};
+  
+  // 1. Map standard characters
   Object.entries(brailleMap).forEach(([key, value]) => {
     reverseBrailleMap[value] = key;
+  });
+
+  // 2. Map contractions so symbols like '⠮' return 'the'
+  Object.entries(contractions).forEach(([word, symbol]) => {
+    reverseBrailleMap[symbol] = word;
   });
   
   let result = '';
@@ -66,12 +104,10 @@ export const brailleToText = (braille: string): string => {
       nextCapital = true;
       continue;
     }
-    
     if (char === numberIndicator) {
       inNumber = true;
       continue;
     }
-    
     if (char === '⠀') {
       result += ' ';
       inNumber = false;
@@ -81,7 +117,8 @@ export const brailleToText = (braille: string): string => {
     const textChar = reverseBrailleMap[char];
     if (textChar) {
       if (nextCapital) {
-        result += textChar.toUpperCase();
+        // Capitalize the first letter of the contracted word or the character
+        result += textChar.charAt(0).toUpperCase() + textChar.slice(1);
         nextCapital = false;
       } else {
         result += textChar;
@@ -90,6 +127,5 @@ export const brailleToText = (braille: string): string => {
       result += char;
     }
   }
-  
   return result;
 };

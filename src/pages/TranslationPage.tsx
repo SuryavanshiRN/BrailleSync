@@ -11,32 +11,38 @@ import { FileUpload } from "@/components/translation/FileUpload";
 import { BrailleInput } from "@/components/translation/BrailleInput";
 import { BrailleDisplay } from "@/components/translation/BrailleDisplay";
 import { AudioPlayer } from "@/components/translation/AudioPlayer";
+import { Switch } from "@/components/ui/switch"; 
 import { textToBraille, brailleToText } from "@/utils/braille";
 import { saveTranslation } from "@/db/api";
+import { fixGrammar, summarizeText } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Trash2, ArrowRightLeft } from "lucide-react";
+import { 
+  Save, 
+  Trash2, 
+  ArrowRightLeft, 
+  Wand2, 
+  AlignLeft, 
+  Loader2 
+} from "lucide-react";
 
 export default function TranslationPage() {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab") as
-    | "text"
-    | "image"
-    | "audio"
-    | "microphone"
-    | "file"
-    | null;
+    | "text" | "image" | "audio" | "microphone" | "file" | null;
 
   const [inputText, setInputText] = useState("");
   const [brailleText, setBrailleText] = useState("");
   const [reverseMode, setReverseMode] = useState(false);
+  const [isGrade2, setIsGrade2] = useState(false); //
+  const [isProcessing, setIsProcessing] = useState(false); //
   const [currentMethod, setCurrentMethod] = useState<
     "text" | "image" | "audio" | "microphone" | "file" | "braille"
   >(tabFromUrl || "text");
   const { toast } = useToast();
 
+  // Integrated Grade-2 logic into the translation effect
   useEffect(() => {
     if (reverseMode) {
-      // Braille to Text mode
       if (brailleText) {
         const text = brailleToText(brailleText);
         setInputText(text);
@@ -44,20 +50,62 @@ export default function TranslationPage() {
         setInputText("");
       }
     } else {
-      // Text to Braille mode
       if (inputText) {
-        const braille = textToBraille(inputText);
+        // Now passes the isGrade2 flag to the utility
+        const braille = textToBraille(inputText, isGrade2);
         setBrailleText(braille);
       } else {
         setBrailleText("");
       }
     }
-  }, [inputText, brailleText, reverseMode]);
+  }, [inputText, brailleText, reverseMode, isGrade2]);
 
-  const handleTextExtracted = (
-    text: string,
-    method: "image" | "audio" | "microphone" | "file"
-  ) => {
+  const handleFixGrammar = async () => {
+    if (!inputText) return;
+    setIsProcessing(true);
+    try {
+      const fixed = await fixGrammar(inputText); // Calls updated api.ts
+      setInputText(fixed);
+      toast({ title: "Grammar Fixed", description: "Suggestions applied successfully." });
+    } catch (error) {
+      toast({ title: "Check Failed", description: "Grammar service error.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+ //
+const handleSummarize = async () => {
+  if (!inputText) return;
+  setIsProcessing(true);
+  try {
+    const summary = await summarizeText(inputText); // Calls the helper in api.ts
+    
+    if (summary === inputText) {
+      toast({ 
+        title: "Summarization Busy", 
+        description: "The AI model is waking up. Please try again in a few seconds.", 
+        variant: "destructive" 
+      });
+    } else {
+      setInputText(summary); // This triggers the Braille regeneration
+      toast({ 
+        title: "Summarized", 
+        description: "Text condensed successfully." 
+      });
+    }
+  } catch (error) {
+    toast({ 
+      title: "Summary Failed", 
+      description: "Could not process document summary.", 
+      variant: "destructive" 
+    });
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+  const handleTextExtracted = (text: string, method: "image" | "audio" | "microphone" | "file") => {
     setInputText(text);
     setCurrentMethod(method);
   };
@@ -69,40 +117,16 @@ export default function TranslationPage() {
 
   const toggleMode = () => {
     setReverseMode(!reverseMode);
-    // Clear both fields when switching modes
     setInputText("");
     setBrailleText("");
     setCurrentMethod(reverseMode ? "text" : "braille");
-    toast({
-      title: "Mode switched",
-      description: reverseMode
-        ? "Switched to Text → Braille mode"
-        : "Switched to Braille → Text mode",
-    });
   };
 
   const handleSave = async () => {
-    if (!inputText || !brailleText) {
-      toast({
-        title: "Nothing to save",
-        description: "Please enter text first",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!inputText || !brailleText) return;
     const result = await saveTranslation(inputText, brailleText, currentMethod);
     if (result) {
-      toast({
-        title: "Saved",
-        description: "Translation saved to history",
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Failed to save translation",
-        variant: "destructive",
-      });
+      toast({ title: "Saved", description: "Translation saved to history" });
     }
   };
 
@@ -110,10 +134,6 @@ export default function TranslationPage() {
     setInputText("");
     setBrailleText("");
     setCurrentMethod(reverseMode ? "braille" : "text");
-    toast({
-      title: "Cleared",
-      description: "All fields have been cleared",
-    });
   };
 
   return (
@@ -124,22 +144,13 @@ export default function TranslationPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-5xl font-bold mb-3">
-                <span className="gradient-text text-shadow-soft">
-                  Translation Tool
-                </span>
+                <span className="gradient-text text-shadow-soft">Translation Tool</span>
               </h1>
               <p className="text-lg text-muted-foreground">
-                {reverseMode
-                  ? "Convert Braille to text using reverse translation"
-                  : "Convert text to Braille using multiple input methods"}
+                {reverseMode ? "Convert Braille to text" : "Convert text to Braille"}
               </p>
             </div>
-            <Button
-              onClick={toggleMode}
-              variant="outline"
-              size="lg"
-              className="gap-3 h-14 px-8 text-base border-2 hover:border-primary/40 hover:shadow-medium transition-all"
-            >
+            <Button onClick={toggleMode} variant="outline" size="lg" className="gap-3 h-14 px-8 border-2">
               <ArrowRightLeft className="w-5 h-5" />
               {reverseMode ? "Text → Braille" : "Braille → Text"}
             </Button>
@@ -148,24 +159,61 @@ export default function TranslationPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-2 space-y-8">
+            
+{/* AI Enhancement Toolbar */}
+{!reverseMode && (
+  <div className="flex flex-wrap items-center justify-between gap-4 p-4 glass-card border-2 rounded-xl">
+    <div className="flex gap-3">
+      {/* Fix Grammar Button */}
+      <Button 
+        variant="secondary" 
+        size="sm" 
+        onClick={handleFixGrammar}
+        // Both buttons are disabled if isProcessing is true
+        disabled={isProcessing || !inputText}
+        className="gap-2"
+      >
+        {/* Both buttons show the loader if isProcessing is true */}
+        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+        Fix Grammar
+      </Button>
+
+      {/* Summarize Button */}
+      <Button 
+        variant="secondary" 
+        size="sm" 
+        onClick={handleSummarize}
+        // Both buttons are disabled if isProcessing is true
+        disabled={isProcessing || !inputText}
+        className="gap-2"
+      >
+        {/* Both buttons show the loader if isProcessing is true */}
+        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlignLeft className="w-4 h-4" />}
+        Summarize
+      </Button>
+    </div>
+
+    {/* Grade-2 Braille Switch */}
+    <div className="flex items-center gap-3 px-2">
+      <span className="text-sm font-medium text-muted-foreground">Grade-2 Braille</span>
+      <Switch 
+        checked={isGrade2} 
+        onCheckedChange={setIsGrade2} 
+        // Also disable the switch while the AI is processing
+        disabled={isProcessing} 
+      />
+    </div>
+  </div>
+)}
             <Card className="glass-card border-2 hover:border-primary/30 transition-all">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">
-                  {reverseMode ? "Braille Input" : "Input"}
-                </CardTitle>
+                <CardTitle className="text-2xl">{reverseMode ? "Braille Input" : "Input"}</CardTitle>
               </CardHeader>
               <CardContent>
                 {reverseMode ? (
-                  <BrailleInput
-                    value={brailleText}
-                    onChange={handleBrailleInput}
-                  />
+                  <BrailleInput value={brailleText} onChange={handleBrailleInput} />
                 ) : (
-                  <Tabs
-                    defaultValue={tabFromUrl || "text"}
-                    value={currentMethod === "braille" ? "text" : currentMethod}
-                    onValueChange={(value) => setCurrentMethod(value as any)}
-                  >
+                  <Tabs defaultValue={tabFromUrl || "text"} value={currentMethod === "braille" ? "text" : currentMethod} onValueChange={(v) => setCurrentMethod(v as any)}>
                     <TabsList className="grid w-full grid-cols-5">
                       <TabsTrigger value="text">Text</TabsTrigger>
                       <TabsTrigger value="file">File</TabsTrigger>
@@ -177,32 +225,16 @@ export default function TranslationPage() {
                       <TextInput value={inputText} onChange={setInputText} />
                     </TabsContent>
                     <TabsContent value="file" className="mt-4">
-                      <FileUpload
-                        onTextExtracted={(text) =>
-                          handleTextExtracted(text, "file")
-                        }
-                      />
+                      <FileUpload onTextExtracted={(t) => handleTextExtracted(t, "file")} />
                     </TabsContent>
                     <TabsContent value="image" className="mt-4">
-                      <ImageUpload
-                        onTextExtracted={(text) =>
-                          handleTextExtracted(text, "image")
-                        }
-                      />
+                      <ImageUpload onTextExtracted={(t) => handleTextExtracted(t, "image")} />
                     </TabsContent>
                     <TabsContent value="audio" className="mt-4">
-                      <AudioUpload
-                        onTextExtracted={(text) =>
-                          handleTextExtracted(text, "audio")
-                        }
-                      />
+                      <AudioUpload onTextExtracted={(t) => handleTextExtracted(t, "audio")} />
                     </TabsContent>
                     <TabsContent value="microphone" className="mt-4">
-                      <MicrophoneInput
-                        onTextExtracted={(text) =>
-                          handleTextExtracted(text, "microphone")
-                        }
-                      />
+                      <MicrophoneInput onTextExtracted={(t) => handleTextExtracted(t, "microphone")} />
                     </TabsContent>
                   </Tabs>
                 )}
@@ -211,20 +243,10 @@ export default function TranslationPage() {
 
             {reverseMode ? (
               <Card className="glass-card border-2 hover:border-primary/30 transition-all">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl">Text Output</CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-4"><CardTitle className="text-2xl">Text Output</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="min-h-[180px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2 border-border">
-                    {inputText ? (
-                      <p className="text-xl leading-relaxed break-words">
-                        {inputText}
-                      </p>
-                    ) : (
-                      <p className="text-muted-foreground text-center text-lg py-12">
-                        Converted text will appear here...
-                      </p>
-                    )}
+                  <div className="min-h-[180px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2">
+                    {inputText ? <p className="text-xl leading-relaxed break-words">{inputText}</p> : <p className="text-muted-foreground text-center text-lg py-12">Converted text will appear here...</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -233,56 +255,22 @@ export default function TranslationPage() {
             )}
 
             <div className="flex gap-4">
-              <Button
-                onClick={handleSave}
-                disabled={!brailleText || !inputText}
-                className="btn-gradient flex-1 h-14 text-base shadow-medium hover:shadow-strong transition-all"
-              >
-                <Save className="w-5 h-5 mr-2" />
-                Save to History
+              <Button onClick={handleSave} disabled={!brailleText || !inputText || isProcessing} className="btn-gradient flex-1 h-14 text-base">
+                <Save className="w-5 h-5 mr-2" /> Save to History
               </Button>
-              <Button
-                onClick={handleClear}
-                variant="outline"
-                disabled={!inputText && !brailleText}
-                className="h-14 px-8 border-2 hover:border-destructive/40 hover:bg-destructive/10 transition-all"
-              >
-                <Trash2 className="w-5 h-5 mr-2" />
-                Clear
+              <Button onClick={handleClear} variant="outline" disabled={(!inputText && !brailleText) || isProcessing} className="h-14 px-8 border-2">
+                <Trash2 className="w-5 h-5 mr-2" /> Clear
               </Button>
             </div>
           </div>
 
           <div className="space-y-8">
             {!reverseMode && <AudioPlayer text={inputText} />}
-
             <Card className="glass-card border-2 hover:border-primary/30 transition-all">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">
-                  {reverseMode ? "Braille Preview" : "Input Preview"}
-                </CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-4"><CardTitle className="text-2xl">{reverseMode ? "Braille Preview" : "Input Preview"}</CardTitle></CardHeader>
               <CardContent>
-                <div className="min-h-[120px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2 border-border">
-                  {reverseMode ? (
-                    brailleText ? (
-                      <p className="text-4xl font-mono leading-relaxed break-all">
-                        {brailleText}
-                      </p>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">
-                        Braille input will appear here...
-                      </p>
-                    )
-                  ) : inputText ? (
-                    <p className="text-base break-words leading-relaxed">
-                      {inputText}
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Input text will appear here...
-                    </p>
-                  )}
+                <div className="min-h-[120px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2">
+                  {reverseMode ? (brailleText ? <p className="text-4xl font-mono break-all">{brailleText}</p> : <p className="py-8 text-center text-muted-foreground">Braille input will appear here...</p>) : (inputText ? <p className="text-base leading-relaxed">{inputText}</p> : <p className="py-8 text-center text-muted-foreground">Input text will appear here...</p>)}
                 </div>
               </CardContent>
             </Card>

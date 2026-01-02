@@ -1,4 +1,6 @@
-// Using OCR.space free API
+import { HfInference } from "@huggingface/inference";
+
+const hf = new HfInference(import.meta.env.VITE_HF_TOKEN);
 const OCR_API_URL = "https://api.ocr.space/parse/image";
 const OCR_API_KEY = "K87649693488957";
 
@@ -36,59 +38,24 @@ export const extractTextFromImage = async (file: File): Promise<string> => {
     }
 
     const data = await response.json();
-    console.log("OCR API full response:", data);
-
-    // Check if OCR was successful
+    
     if (data.OCRExitCode === 1 || data.OCRExitCode === "1") {
       if (data.ParsedResults && data.ParsedResults.length > 0) {
         const result = data.ParsedResults[0];
-
-        // Check if there was an error in processing this specific result
         if (result.ErrorMessage && result.ErrorMessage.trim() !== "") {
-          console.error("OCR result error:", result.ErrorMessage);
           throw new Error(result.ErrorMessage);
         }
-
         const extractedText = result.ParsedText || "";
         if (extractedText.trim() === "") {
-          throw new Error(
-            "No text detected in the image. Please ensure the image contains clear, readable text."
-          );
+          throw new Error("No text detected in the image.");
         }
-
         return extractedText.trim();
       }
     }
-
-    // Handle various error cases
-    if (data.IsErroredOnProcessing === true) {
-      const errorMessages = data.ParsedResults?.map((r: any) => r.ErrorMessage)
-        .filter(Boolean)
-        .join(", ");
-      throw new Error(errorMessages || "Error processing image");
-    }
-
-    if (
-      data.ErrorMessage &&
-      Array.isArray(data.ErrorMessage) &&
-      data.ErrorMessage.length > 0
-    ) {
-      throw new Error(data.ErrorMessage[0]);
-    }
-
-    if (data.ErrorMessage && typeof data.ErrorMessage === "string") {
-      throw new Error(data.ErrorMessage);
-    }
-
-    throw new Error(
-      "Failed to extract text from image. Please try a different image with clearer text."
-    );
+    throw new Error(data.ErrorMessage || "Failed to extract text from image.");
   } catch (error) {
     console.error("OCR error details:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("Failed to process image");
+    throw error instanceof Error ? error : new Error("Failed to process image");
   }
 };
 
@@ -108,9 +75,7 @@ export const transcribeAudio = async (file: File): Promise<string> => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error?.message || "Speech-to-text request failed"
-      );
+      throw new Error(errorData.error?.message || "Speech-to-text request failed");
     }
 
     const data = await response.json();
@@ -121,10 +86,7 @@ export const transcribeAudio = async (file: File): Promise<string> => {
   }
 };
 
-export const textToSpeech = async (
-  text: string,
-  voice = "alloy"
-): Promise<Blob> => {
+export const textToSpeech = async (text: string, voice = "alloy"): Promise<Blob> => {
   try {
     const response = await fetch(TTS_API_URL, {
       method: "POST",
@@ -141,14 +103,73 @@ export const textToSpeech = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error?.message || "Text-to-speech request failed"
-      );
+      throw new Error(errorData.error?.message || "Text-to-speech request failed");
     }
 
     return await response.blob();
   } catch (error) {
     console.error("Text-to-speech error:", error);
     throw error;
+  }
+};
+
+export const checkGrammar = async (text: string) => {
+  const params = new URLSearchParams();
+  params.append('text', text);
+  params.append('language', 'en-US');
+
+  const response = await fetch("https://api.languagetool.org/v2/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params,
+  });
+  return await response.json(); 
+};
+
+/**
+ * NEW: Automated fix helper for Grammar
+ * Applies the first suggestion for every grammatical error found.
+ */
+export const fixGrammar = async (text: string): Promise<string> => {
+  const data = await checkGrammar(text);
+  let fixedText = text;
+  
+  // Apply matches in reverse order so character offsets remain valid
+  const matches = [...data.matches].reverse();
+  for (const match of matches) {
+    if (match.replacements && match.replacements.length > 0) {
+      const replacement = match.replacements[0].value;
+      fixedText = 
+        fixedText.substring(0, match.offset) + 
+        replacement + 
+        fixedText.substring(match.offset + match.length);
+    }
+  }
+  return fixedText;
+};
+
+export const summarizeText = async (text: string): Promise<string> => {
+  try {
+    const result = await hf.summarization({
+      model: 'facebook/bart-large-cnn',
+      inputs: text,
+      parameters: {
+        max_length: 100,
+        min_length: 30,
+      }
+    });
+
+    // The library returns a simple object with the summary text
+    return result.summary_text || text;
+  } catch (error: any) {
+    // If the model is loading (Error 503), the library helps manage the retry logic
+    if (error.message?.includes("loading")) {
+      console.warn("Model is loading, retrying in 3 seconds...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return summarizeText(text);
+    }
+    
+    console.error("Summarization error:", error);
+    return text;
   }
 };
