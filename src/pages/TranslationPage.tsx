@@ -11,24 +11,29 @@ import { FileUpload } from "@/components/translation/FileUpload";
 import { BrailleInput } from "@/components/translation/BrailleInput";
 import { BrailleDisplay } from "@/components/translation/BrailleDisplay";
 import { AudioPlayer } from "@/components/translation/AudioPlayer";
-import { Switch } from "@/components/ui/switch"; 
+import { Switch } from "@/components/ui/switch";
 import { textToBraille, brailleToText } from "@/utils/braille";
 import { saveTranslation } from "@/db/api";
 import { fixGrammar, summarizeText } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Save, 
-  Trash2, 
-  ArrowRightLeft, 
-  Wand2, 
-  AlignLeft, 
-  Loader2 
+import {
+  Save,
+  Trash2,
+  ArrowRightLeft,
+  Wand2,
+  AlignLeft,
+  Loader2,
 } from "lucide-react";
 
 export default function TranslationPage() {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab") as
-    | "text" | "image" | "audio" | "microphone" | "file" | null;
+    | "text"
+    | "image"
+    | "audio"
+    | "microphone"
+    | "file"
+    | null;
 
   const [inputText, setInputText] = useState("");
   const [brailleText, setBrailleText] = useState("");
@@ -49,7 +54,11 @@ export default function TranslationPage() {
       } else {
         setInputText("");
       }
-    } else {
+    }
+  }, [brailleText, reverseMode]);
+
+  useEffect(() => {
+    if (!reverseMode) {
       if (inputText) {
         // Now passes the isGrade2 flag to the utility
         const braille = textToBraille(inputText, isGrade2);
@@ -58,7 +67,7 @@ export default function TranslationPage() {
         setBrailleText("");
       }
     }
-  }, [inputText, brailleText, reverseMode, isGrade2]);
+  }, [inputText, reverseMode, isGrade2]);
 
   const handleFixGrammar = async () => {
     if (!inputText) return;
@@ -66,46 +75,57 @@ export default function TranslationPage() {
     try {
       const fixed = await fixGrammar(inputText); // Calls updated api.ts
       setInputText(fixed);
-      toast({ title: "Grammar Fixed", description: "Suggestions applied successfully." });
+      toast({
+        title: "Grammar Fixed",
+        description: "Suggestions applied successfully.",
+      });
     } catch (error) {
-      toast({ title: "Check Failed", description: "Grammar service error.", variant: "destructive" });
+      toast({
+        title: "Check Failed",
+        description: "Grammar service error.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
- //
-const handleSummarize = async () => {
-  if (!inputText) return;
-  setIsProcessing(true);
-  try {
-    const summary = await summarizeText(inputText); // Calls the helper in api.ts
-    
-    if (summary === inputText) {
-      toast({ 
-        title: "Summarization Busy", 
-        description: "The AI model is waking up. Please try again in a few seconds.", 
-        variant: "destructive" 
-      });
-    } else {
-      setInputText(summary); // This triggers the Braille regeneration
-      toast({ 
-        title: "Summarized", 
-        description: "Text condensed successfully." 
-      });
-    }
-  } catch (error) {
-    toast({ 
-      title: "Summary Failed", 
-      description: "Could not process document summary.", 
-      variant: "destructive" 
-    });
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  //
+  const handleSummarize = async () => {
+    if (!inputText) return;
+    setIsProcessing(true);
+    try {
+      const summary = await summarizeText(inputText); // Calls the helper in api.ts
 
-  const handleTextExtracted = (text: string, method: "image" | "audio" | "microphone" | "file") => {
+      if (summary === inputText) {
+        toast({
+          title: "Summarization Busy",
+          description:
+            "The AI model is waking up. Please try again in a few seconds.",
+          variant: "destructive",
+        });
+      } else {
+        setInputText(summary); // This triggers the Braille regeneration
+        toast({
+          title: "Summarized",
+          description: "Text condensed successfully.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Summary Failed",
+        description: "Could not process document summary.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTextExtracted = (
+    text: string,
+    method: "image" | "audio" | "microphone" | "file"
+  ) => {
     setInputText(text);
     setCurrentMethod(method);
   };
@@ -123,10 +143,37 @@ const handleSummarize = async () => {
   };
 
   const handleSave = async () => {
-    if (!inputText || !brailleText) return;
-    const result = await saveTranslation(inputText, brailleText, currentMethod);
-    if (result) {
-      toast({ title: "Saved", description: "Translation saved to history" });
+    if (!inputText || !brailleText) {
+      toast({
+        title: "Cannot Save",
+        description: "Both text and Braille fields must have content to save.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await saveTranslation(
+        inputText,
+        brailleText,
+        currentMethod
+      );
+      if (result) {
+        toast({ title: "Saved", description: "Translation saved to history" });
+      } else {
+        toast({
+          title: "Save Failed",
+          description: "Please ensure you are logged in and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving translation:", error);
+      toast({
+        title: "Save Failed",
+        description: "An error occurred while saving. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -144,13 +191,22 @@ const handleSummarize = async () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-5xl font-bold mb-3">
-                <span className="gradient-text text-shadow-soft">Translation Tool</span>
+                <span className="gradient-text text-shadow-soft">
+                  Translation Tool
+                </span>
               </h1>
               <p className="text-lg text-muted-foreground">
-                {reverseMode ? "Convert Braille to text" : "Convert text to Braille"}
+                {reverseMode
+                  ? "Convert Braille to text"
+                  : "Convert text to Braille"}
               </p>
             </div>
-            <Button onClick={toggleMode} variant="outline" size="lg" className="gap-3 h-14 px-8 border-2">
+            <Button
+              onClick={toggleMode}
+              variant="outline"
+              size="lg"
+              className="gap-3 h-14 px-8 border-2"
+            >
               <ArrowRightLeft className="w-5 h-5" />
               {reverseMode ? "Text → Braille" : "Braille → Text"}
             </Button>
@@ -159,61 +215,79 @@ const handleSummarize = async () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-2 space-y-8">
-            
-{/* AI Enhancement Toolbar */}
-{!reverseMode && (
-  <div className="flex flex-wrap items-center justify-between gap-4 p-4 glass-card border-2 rounded-xl">
-    <div className="flex gap-3">
-      {/* Fix Grammar Button */}
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={handleFixGrammar}
-        // Both buttons are disabled if isProcessing is true
-        disabled={isProcessing || !inputText}
-        className="gap-2"
-      >
-        {/* Both buttons show the loader if isProcessing is true */}
-        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-        Fix Grammar
-      </Button>
+            {/* AI Enhancement Toolbar */}
+            {!reverseMode && (
+              <div className="flex flex-wrap items-center justify-between gap-4 p-4 glass-card border-2 rounded-xl">
+                <div className="flex gap-3">
+                  {/* Fix Grammar Button */}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleFixGrammar}
+                    // Both buttons are disabled if isProcessing is true
+                    disabled={isProcessing || !inputText}
+                    className="gap-2"
+                  >
+                    {/* Both buttons show the loader if isProcessing is true */}
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-4 h-4" />
+                    )}
+                    Fix Grammar
+                  </Button>
 
-      {/* Summarize Button */}
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={handleSummarize}
-        // Both buttons are disabled if isProcessing is true
-        disabled={isProcessing || !inputText}
-        className="gap-2"
-      >
-        {/* Both buttons show the loader if isProcessing is true */}
-        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlignLeft className="w-4 h-4" />}
-        Summarize
-      </Button>
-    </div>
+                  {/* Summarize Button */}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleSummarize}
+                    // Both buttons are disabled if isProcessing is true
+                    disabled={isProcessing || !inputText}
+                    className="gap-2"
+                  >
+                    {/* Both buttons show the loader if isProcessing is true */}
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <AlignLeft className="w-4 h-4" />
+                    )}
+                    Summarize
+                  </Button>
+                </div>
 
-    {/* Grade-2 Braille Switch */}
-    <div className="flex items-center gap-3 px-2">
-      <span className="text-sm font-medium text-muted-foreground">Grade-2 Braille</span>
-      <Switch 
-        checked={isGrade2} 
-        onCheckedChange={setIsGrade2} 
-        // Also disable the switch while the AI is processing
-        disabled={isProcessing} 
-      />
-    </div>
-  </div>
-)}
+                {/* Grade-2 Braille Switch */}
+                <div className="flex items-center gap-3 px-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Grade-2 Braille
+                  </span>
+                  <Switch
+                    checked={isGrade2}
+                    onCheckedChange={setIsGrade2}
+                    // Also disable the switch while the AI is processing
+                    disabled={isProcessing}
+                  />
+                </div>
+              </div>
+            )}
             <Card className="glass-card border-2 hover:border-primary/30 transition-all">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">{reverseMode ? "Braille Input" : "Input"}</CardTitle>
+                <CardTitle className="text-2xl">
+                  {reverseMode ? "Braille Input" : "Input"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {reverseMode ? (
-                  <BrailleInput value={brailleText} onChange={handleBrailleInput} />
+                  <BrailleInput
+                    value={brailleText}
+                    onChange={handleBrailleInput}
+                  />
                 ) : (
-                  <Tabs defaultValue={tabFromUrl || "text"} value={currentMethod === "braille" ? "text" : currentMethod} onValueChange={(v) => setCurrentMethod(v as any)}>
+                  <Tabs
+                    defaultValue={tabFromUrl || "text"}
+                    value={currentMethod === "braille" ? "text" : currentMethod}
+                    onValueChange={(v) => setCurrentMethod(v as any)}
+                  >
                     <TabsList className="grid w-full grid-cols-5">
                       <TabsTrigger value="text">Text</TabsTrigger>
                       <TabsTrigger value="file">File</TabsTrigger>
@@ -225,16 +299,26 @@ const handleSummarize = async () => {
                       <TextInput value={inputText} onChange={setInputText} />
                     </TabsContent>
                     <TabsContent value="file" className="mt-4">
-                      <FileUpload onTextExtracted={(t) => handleTextExtracted(t, "file")} />
+                      <FileUpload
+                        onTextExtracted={(t) => handleTextExtracted(t, "file")}
+                      />
                     </TabsContent>
                     <TabsContent value="image" className="mt-4">
-                      <ImageUpload onTextExtracted={(t) => handleTextExtracted(t, "image")} />
+                      <ImageUpload
+                        onTextExtracted={(t) => handleTextExtracted(t, "image")}
+                      />
                     </TabsContent>
                     <TabsContent value="audio" className="mt-4">
-                      <AudioUpload onTextExtracted={(t) => handleTextExtracted(t, "audio")} />
+                      <AudioUpload
+                        onTextExtracted={(t) => handleTextExtracted(t, "audio")}
+                      />
                     </TabsContent>
                     <TabsContent value="microphone" className="mt-4">
-                      <MicrophoneInput onTextExtracted={(t) => handleTextExtracted(t, "microphone")} />
+                      <MicrophoneInput
+                        onTextExtracted={(t) =>
+                          handleTextExtracted(t, "microphone")
+                        }
+                      />
                     </TabsContent>
                   </Tabs>
                 )}
@@ -243,10 +327,20 @@ const handleSummarize = async () => {
 
             {reverseMode ? (
               <Card className="glass-card border-2 hover:border-primary/30 transition-all">
-                <CardHeader className="pb-4"><CardTitle className="text-2xl">Text Output</CardTitle></CardHeader>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl">Text Output</CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="min-h-[180px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2">
-                    {inputText ? <p className="text-xl leading-relaxed break-words">{inputText}</p> : <p className="text-muted-foreground text-center text-lg py-12">Converted text will appear here...</p>}
+                    {inputText ? (
+                      <p className="text-xl leading-relaxed break-words">
+                        {inputText}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground text-center text-lg py-12">
+                        Converted text will appear here...
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -255,10 +349,19 @@ const handleSummarize = async () => {
             )}
 
             <div className="flex gap-4">
-              <Button onClick={handleSave} disabled={!brailleText || !inputText || isProcessing} className="btn-gradient flex-1 h-14 text-base">
+              <Button
+                onClick={handleSave}
+                disabled={!brailleText || !inputText || isProcessing}
+                className="btn-gradient flex-1 h-14 text-base"
+              >
                 <Save className="w-5 h-5 mr-2" /> Save to History
               </Button>
-              <Button onClick={handleClear} variant="outline" disabled={(!inputText && !brailleText) || isProcessing} className="h-14 px-8 border-2">
+              <Button
+                onClick={handleClear}
+                variant="outline"
+                disabled={(!inputText && !brailleText) || isProcessing}
+                className="h-14 px-8 border-2"
+              >
                 <Trash2 className="w-5 h-5 mr-2" /> Clear
               </Button>
             </div>
@@ -267,10 +370,30 @@ const handleSummarize = async () => {
           <div className="space-y-8">
             {!reverseMode && <AudioPlayer text={inputText} />}
             <Card className="glass-card border-2 hover:border-primary/30 transition-all">
-              <CardHeader className="pb-4"><CardTitle className="text-2xl">{reverseMode ? "Braille Preview" : "Input Preview"}</CardTitle></CardHeader>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl">
+                  {reverseMode ? "Braille Preview" : "Input Preview"}
+                </CardTitle>
+              </CardHeader>
               <CardContent>
                 <div className="min-h-[120px] p-6 bg-gradient-to-br from-muted/50 to-muted rounded-xl border-2">
-                  {reverseMode ? (brailleText ? <p className="text-4xl font-mono break-all">{brailleText}</p> : <p className="py-8 text-center text-muted-foreground">Braille input will appear here...</p>) : (inputText ? <p className="text-base leading-relaxed">{inputText}</p> : <p className="py-8 text-center text-muted-foreground">Input text will appear here...</p>)}
+                  {reverseMode ? (
+                    brailleText ? (
+                      <p className="text-4xl font-mono break-all">
+                        {brailleText}
+                      </p>
+                    ) : (
+                      <p className="py-8 text-center text-muted-foreground">
+                        Braille input will appear here...
+                      </p>
+                    )
+                  ) : inputText ? (
+                    <p className="text-base leading-relaxed">{inputText}</p>
+                  ) : (
+                    <p className="py-8 text-center text-muted-foreground">
+                      Input text will appear here...
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS translations (
   user_uuid uuid NOT NULL,
   input_text text NOT NULL,
   braille_output text NOT NULL,
-  input_method text NOT NULL CHECK (input_method IN ('text', 'image', 'audio', 'microphone')),
+  input_method text NOT NULL CHECK (input_method IN ('text', 'image', 'audio', 'microphone', 'file', 'braille' )),
   created_at timestamptz DEFAULT now()
 );
 

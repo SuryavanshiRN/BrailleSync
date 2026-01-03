@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   Card,
   CardContent,
@@ -16,6 +17,8 @@ import {
   Music,
   Mic,
   FileText,
+  Binary,
+  Headphones,
   TrendingUp,
   Activity,
   Clock,
@@ -23,13 +26,21 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StatsCards } from "@/components/dashboard/StatsCards";
+
 import { useTranslation } from "react-i18next";
 
 export default function DashboardPage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<TranslationStats>({
     total: 0,
-    byMethod: { text: 0, image: 0, audio: 0, microphone: 0 },
+    byMethod: {
+      text: 0,
+      image: 0,
+      audio: 0,
+      microphone: 0,
+      file: 0,
+      braille: 0,
+    },
   });
   const [recentTranslations, setRecentTranslations] = useState<Translation[]>(
     []
@@ -54,8 +65,10 @@ export default function DashboardPage() {
   const methodIcons = {
     text: Type,
     image: Image,
-    audio: Music,
+    audio: Headphones,
     microphone: Mic,
+    file: FileText,
+    braille: Binary,
   };
 
   const statCards = [
