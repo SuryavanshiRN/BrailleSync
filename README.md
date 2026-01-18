@@ -21,14 +21,12 @@ Braille Sync is an accessible, secure web-based translation platform that conver
 ### ✨ Key Features
 
 - 🔐 **User Authentication**
-
   - Secure email and password authentication
   - Personalized user profiles with name display
   - Protected routes for authenticated features
   - Individual translation history per user
 
 - 🔤 **Multiple Input Methods**
-
   - Direct text input
   - Image-to-text conversion (OCR)
   - Audio file transcription
@@ -85,12 +83,10 @@ Braille Sync is an accessible, secure web-based translation platform that conver
    a. Create a new Supabase project at [https://supabase.com](https://supabase.com)
 
    b. Enable Email Authentication:
-
    - Go to Authentication > Providers
    - Enable Email provider
 
    c. Run the database migrations in Supabase SQL Editor:
-
    - Apply `supabase/migrations/00001_create_translations_table.sql`
    - Apply `supabase/migrations/00002_add_authentication.sql`
 
@@ -189,12 +185,10 @@ Braille_Sync/
 ### Getting Started
 
 1. **Visit the Landing Page**
-
    - Browse the features on the public home page
    - Click on any feature card to explore
 
 2. **Create an Account**
-
    - Click "Login" in the top right corner
    - Switch to "Sign Up" tab
    - Enter your name, email, and password
@@ -208,12 +202,10 @@ Braille_Sync/
 ### Translation Workflow
 
 1. **Navigate to Translation Page**
-
    - Click on "Translate" from the navigation menu
    - Or click on any feature card from the home page
 
 2. **Choose Input Method**
-
    - **Text**: Type or paste text directly
    - **Image**: Upload an image containing text (OCR)
    - **Audio**: Upload an audio file for transcription
@@ -221,7 +213,6 @@ Braille_Sync/
    - **File**: Upload document files
 
 3. **View Results**
-
    - See the Braille conversion in real-time
    - Play audio output if needed
 

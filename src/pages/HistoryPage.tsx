@@ -10,11 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  getTranslations,
-  deleteTranslation,
-  searchTranslations,
-} from "@/db/api";
+import { getTranslations, deleteTranslation } from "@/db/api";
 import type { Translation } from "@/types";
 import {
   Type,
@@ -80,7 +76,7 @@ export default function HistoryPage() {
       filtered = filtered.filter(
         (t) =>
           t.input_text.toLowerCase().includes(query) ||
-          t.braille_output.toLowerCase().includes(query)
+          t.braille_output.toLowerCase().includes(query),
       );
     }
 
@@ -106,18 +102,6 @@ export default function HistoryPage() {
 
     setFilteredTranslations(filtered);
   }, [translations, filterMethod, searchQuery, sortBy]);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      loadTranslations();
-      return;
-    }
-
-    setIsLoading(true);
-    const results = await searchTranslations(searchQuery);
-    setTranslations(results);
-    setIsLoading(false);
-  };
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
@@ -252,15 +236,16 @@ export default function HistoryPage() {
                   placeholder="Search translations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   className="flex-1 h-12 text-base border-2 focus:border-primary/40 transition-all"
                 />
                 <Button
-                  onClick={handleSearch}
-                  className="btn-gradient h-12 px-8 shadow-medium hover:shadow-strong"
+                  onClick={() => setSearchQuery("")}
+                  variant="outline"
+                  className="h-12 px-8"
+                  disabled={!searchQuery}
                 >
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  Clear
                 </Button>
               </div>
 
